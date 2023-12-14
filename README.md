@@ -12,4 +12,4 @@
 
 Perfect for anyone keen on self-improvement, mindfulness, and lifestyle optimization, **Qiju Zhu** is more than just an activity tracker – it's a companion in your journey towards a more organized, reflective, and balanced life.
 
-Join us in redefining daily life logging and embrace the art of mindful living with **Qiju Zhu**.
+
