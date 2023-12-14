@@ -13,3 +13,11 @@
 Perfect for anyone keen on self-improvement, mindfulness, and lifestyle optimization, **Qiju Zhu** is more than just an activity tracker – it's a companion in your journey towards a more organized, reflective, and balanced life.
 
 
+### 人员构成
+| 姓名   | 身份 | 所在地 | 自我介绍 |
+| ------ | ---- | ------ | -------- |
+| 张益新 | 队长 | 上海   |          |
+| 研硕   | 产品 | 北京   |          |
+| 邢晓飞 | 前端 | 北京   |          |
+| 唐晶   | 算法 | 武汉   |          |
+| 朱恒璟 | 后端 | 上海   |          |
