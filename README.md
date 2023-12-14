@@ -21,3 +21,10 @@ Perfect for anyone keen on self-improvement, mindfulness, and lifestyle optimiza
 | 邢晓飞 | 前端 | 北京   |          |
 | 唐晶   | 算法 | 武汉   |          |
 | 朱恒璟 | 后端 | 上海   |          |
+
+---
+### 参考项目：
+
+https://aistudio.baidu.com/cooperate/erniebotsdk
+
+https://github.com/PaddlePaddle/ERNIE-Bot-SDK
