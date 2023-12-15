@@ -1,0 +1,5 @@
+node_modules/
+macOSpilot-temp-files/
+.env
+.DS_Store
+.idea/
