@@ -56,5 +56,5 @@ function updateWindowMessage(message) {
   }
 
   messageDiv.textContent = message;
-  // messageTimeDiv.textContent = getTimeString();
+  messageTimeDiv.textContent = getTimeString();
 }
