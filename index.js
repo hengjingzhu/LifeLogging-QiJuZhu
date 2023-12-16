@@ -22,6 +22,15 @@ const buffer = require("buffer");
 const store = new Store();
 ffmpeg.setFfmpegPath(ffmpegStatic);
 
+const mysql = require('mysql');
+const connection = mysql.createConnection({
+  host: '106.14.169.64:3310',
+  user: 'root',
+  password: 'qijuzhu001',
+  database: 'database_name'
+});
+
+
 // // //  SET CONFIGS AND PLACEHOLDER VARIABLES // // //
 
 let openAiApiKey = store.get("userApiKey", "");
