@@ -127,8 +127,70 @@
       </div>
     </div>
     <div id="analysis"></div>
+    <video id="video" width="320" height="240" controls></video>
+    <button id="save-button">保存视频</button>
+
     <script src="renderer.js"></script>
     <script>
+      // document.getElementById('startRecording').addEventListener('click', async () => {
+        // const result = await ipcRenderer.invoke('vedio-start-recording');
+        // console.log(result)
+        const videoElement = document.querySelector('video');
+        if (navigator.mediaDevices.getUserMedia) {
+          navigator.mediaDevices.getUserMedia({ video: true })
+                  .then(stream => {
+                    videoElement.srcObject = stream;
+                    videoElement.play();
+                  })
+                  .catch(error => {
+                    console.error(error);
+                  });
+        } else {
+          console.error('getUserMedia is not supported in this browser');
+        }
+
+
+      document.getElementById('save-button').addEventListener('click', async () => {
+        const videoElement = document.querySelector('video');
+        console.log("摄像头正在录制...")
+        if (videoElement && videoElement.srcObject) {
+          console.log("摄像头正在录制...")
+          const stream = videoElement.srcObject;
+          const recorder = new MediaRecorder(stream);
+          let recordedChunks = [];
+
+          // 开始录制，并将录制的数据保存在 recordedChunks 数组中
+          recorder.ondataavailable = event => {
+            if (event.data.size > 0) {
+              recordedChunks.push(event.data);
+            } else {
+              // ...
+            }
+          };
+
+          recorder.start();
+          console.log("开始录制。。。")
+          // 停止录制，你可以设置一个定时器或者其他触发条件来停止录制
+          // 这里为了简单起见，我们在录制几秒钟后停止
+          setTimeout(() => {
+            recorder.stop();
+          }, 5000); // 录制5秒钟
+          console.log("开始录制。。。")
+          // 等待录制结束
+          await new Promise(resolve => {
+            recorder.onstop = resolve;
+          });
+
+          // 将录制的数据转换为 Blob 对象
+          const blob = new Blob(recordedChunks, { type: 'video/webm' });
+
+          // 通过 Electron 的 ipcRenderer 发送数据到主进程保存文件
+          ipcRenderer.send('save-video', blob);
+        } else {
+          console.error('No video stream found.');
+        }
+      });
+
       var modal = document.getElementById("settingsModal");
       var btn = document.getElementById("settingsIcon");
 

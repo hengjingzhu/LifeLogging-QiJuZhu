@@ -17,9 +17,41 @@ const FormData = require("form-data");
 const { exec } = require("child_process");
 const activeWin = require("active-win");
 const Store = require("electron-store");
+const buffer = require("buffer");
 
 const store = new Store();
 ffmpeg.setFfmpegPath(ffmpegStatic);
+
+// const mysql = require('mysql');
+// const connection = mysql.createConnection({
+//   host: '106.14.169.64:3310',
+//   user: 'root',
+//   password: 'qijuzhu001',
+//   database: 'database_name'
+// });
+
+const redis = require('redis');
+const redisClient = redis.createClient();
+
+redisClient.on('connect', function() {
+  console.log('Connected to Redis server.');
+});
+
+redisClient.on('error', function(err) {
+  console.error('Error connecting to Redis server: ' + err);
+});
+
+// redisClient.connect().then(res=>{
+//   console.log(res)
+//   console.log(redisClient.isOpen)
+//   console.log(redisClient.isReady)
+//   redisClient.set('hello', 'world') // 设置key "hello"的值为"world
+//   redisClient.get("hello").then(res=>{
+//     console.log(res)
+//   })
+// }).catch(err =>{
+//   console.log(err)
+// })
 
 // // //  SET CONFIGS AND PLACEHOLDER VARIABLES // // //
 
@@ -68,7 +100,7 @@ const micRecordingFilePath = path.join(tempFilesDir, "macOSpilotMicAudio.raw");
 const mp3FilePath = path.join(tempFilesDir, "macOSpilotAudioInput.mp3");
 const screenshotFilePath = path.join(tempFilesDir, "macOSpilotScreenshot.png");
 const audioFilePath = path.join(tempFilesDir, "macOSpilotTtsResponse.mp3");
-
+const vedioFilePath = path.join(tempFilesDir, "vedio.mp4");
 // // // // // // // // // // // // // // // // // // // // //
 
 // Create main Electron window
@@ -206,6 +238,41 @@ ipcMain.on("audio-buffer", (event, buffer) => {
       console.log(error);
     }
   });
+});
+
+ipcMain.on("vedio-buffer",(event, buffer) =>{
+  // const outputPath = path.resolve(__dirname, 'recording.webm'); // 设置输出路径
+  fs.writeFile(vedioFilePath, buffer, (err) => { // 将视频数据写入文件
+    if (err) {
+      console.error('Error saving video file:', err);
+    } else {
+      console.log('Video saved to:', vedioFilePath);
+    }
+  });
+})
+
+ipcMain.on("save-vedio-frame",(event, buffer) =>{
+  const outputFramePath = path.join(tempFilesDir, `frame_${Date.now()}.png`); // 自定义保存路径和文件名，这里保存为 PNG 图片文件，你可以根据需要修改为其他格式或处理方式
+  fs.writeFile(outputFramePath, buffer, (err) => { // 将视频数据写入文件
+    if (err) {
+      console.error('Error saving video file:', err);
+    } else {
+      // 将帧数据写入文件
+      console.log(`saved to ${outputFramePath}`); // 输出保存路径和帧编号，便于调试和跟踪录制状态和进度
+    }
+  });
+})
+
+ipcMain.on('save-video', async (event, blob) => {
+  try {
+    // 将 Blob 对象转换为 Buffer，以便使用 fs 模块写入文件
+    const buffer = Buffer.from(await blob.arrayBuffer());
+    const outputPath = path.join(tempFilesDir, `video_${Date.now()}.webm`); // 自定义保存路径和文件名
+    await fs.writeFile(outputPath, buffer); // 将数据写入文件
+    event.reply('video-saved', outputPath); // 可选：回复渲染进程文件已保存的消息和路径
+  } catch (error) {
+    console.error('Error saving video:', error);
+  }
 });
 
 // Capture a screenshot of the selected window, and save it to disk
@@ -401,6 +468,19 @@ async function callErnieApi(audioInput){
 app.whenReady().then(() => {
   createMainWindow();
   createNotificationWindow();
+  // link redis db
+  // redisClient = redis.createClient({
+  //   host: '106.14.169.64',
+  //   port: 7000,
+  //   password: 'qijuzhu001',
+  //   db: 0
+  // });
+
+  // redisClient.connect().then(res=>{
+  //   console.log(res)
+  // }).catch(err =>{
+  //   console.log(err)
+  // })
 
   // Request microphone access
   systemPreferences.askForMediaAccess('microphone').then(accessGranted => {
@@ -413,8 +493,18 @@ app.whenReady().then(() => {
     console.error('Error requesting microphone access:', err);
   });
 
+  // 请求摄像头权限
+  systemPreferences.askForMediaAccess('camera').then((granted) => {
+    if (granted) {
+      console.log('摄像头权限已授予');
+      // 在这里编写使用摄像头的代码
+    } else {
+      console.log('摄像头权限被拒绝');
+    }
+  });
   // This call initializes MediaRecorder with an 500ms audio recording, to get around an issue seen on some machines where the first user-triggered recording doesn't work.
   mainWindow.webContents.send("init-mediaRecorder");
+  // mainWindow.webContents.send("init-vedioRecorder");
 
   // If defined keyboard shortcut is triggered then run
   globalShortcut.register(keyboardShortcut, async () => {
@@ -451,12 +541,59 @@ app.whenReady().then(() => {
       }
       mainWindow.webContents.send("start-recording");
       notificationWindow.webContents.send("start-recording");
+
+      mainWindow.webContents.send("start-recording-vedio");
+      // notificationWindow.webContents.send("start-recording-vedio");
       isRecording = true;
     } else {
       // If we're already recording, the keyboard shortcut means we should stop
       mainWindow.webContents.send("stop-recording");
       notificationWindow.webContents.send("stop-recording");
+      mainWindow.webContents.send("stop-recording-vedio");
+      // notificationWindow.webContents.send("stop-recording-vedio");
       isRecording = false;
+    }
+  });
+
+  ipcMain.handle('vedio-start-recording', async () => {
+    console.log("vedio-start-recording")
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      const recordedChunks = [];
+      const streamRecorder = new MediaRecorder(stream);
+
+      streamRecorder.ondataavailable = event => {
+        if (event.data.size > 0) {
+          recordedChunks.push(event.data);
+        } else {
+          // ...停止录制后处理数据
+        }
+      };
+
+      streamRecorder.start(); // 开始录制
+
+      // 这里你可以设置一个定时器或者其他机制来停止录制，例如：
+      setTimeout(() => streamRecorder.stop(), 10000); // 10秒后停止录制
+
+      return new Promise(resolve => {
+        streamRecorder.onstop = () => {
+          const blob = new Blob(recordedChunks, { type: 'video/mp4' }); // 创建 Blob 对象
+          const buffer = Buffer.from(blob); // 转换为 Buffer 以使用 Node.js 文件系统 API
+          // const outputPath = path.resolve(__dirname, 'recording.webm'); // 设置输出路径
+          fs.writeFile(vedioFilePath, buffer, (err) => { // 将视频数据写入文件
+            if (err) {
+              console.error('Error saving video file:', err);
+              resolve(false);
+            } else {
+              console.log('Video saved to:', outputPath);
+              resolve(true);
+            }
+          });
+        };
+      });
+    } catch (err) {
+      console.error('Error accessing media devices:', err);
+      return false;
     }
   });
 
