@@ -3,6 +3,9 @@ const { ipcRenderer } = require("electron");
 let mediaRecorder; // Define mediaRecorder in a broader scope
 let audioChunks = []; // Define audioChunks in a broader scope
 
+let vedioRecorder; // Define vedioRecorder in a broader scope
+let vedioChunks = []; // Define vedioChunks in a broader scope
+
 function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
@@ -26,6 +29,16 @@ ipcRenderer.on("init-mediaRecorder", async () => {
   mediaRecorder.stop();
 });
 
+
+ipcRenderer.on("init-vedioRecorder", async () => {
+  console.log("start init vedio...")
+  const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+  vedioRecorder = new MediaRecorder(stream);
+  console.log("vedioRecorder" + vedioRecorder)
+  vedioRecorder.start();
+  sleep(1);
+  vedioRecorder.stop();
+});
 ipcRenderer.on("start-recording", async () => {
   try {
     updateWindowMessage("Recording in progress...");
@@ -57,6 +70,36 @@ ipcRenderer.on("start-recording", async () => {
   }
 });
 
+ipcRenderer.on("start-recording-vedio", async () => {
+  try {
+    updateWindowMessage("Recording vedio in progress...");
+    const stream = await navigator.mediaDevices.getUserMedia({ vedio: true });
+    vedioRecorder = new MediaRecorder(stream); // Use the broader scoped mediaRecorder
+    vedioChunks = []; // Reset audioChunks for a new recording
+
+    vedioRecorder.addEventListener("dataavailable", (event) => {
+      vedioChunks.push(event.data);
+    });
+
+    vedioRecorder.addEventListener("stop", async () => {
+      const vedioBlob = new Blob(vedioChunks, { type: "video/mp4" });
+
+      // Convert Blob to ArrayBuffer
+      const arrayBuffer = await vedioBlob.arrayBuffer();
+
+      // Convert ArrayBuffer to Buffer
+      const buffer = Buffer.from(arrayBuffer);
+
+      // Send the buffer to the main process
+      ipcRenderer.send("vedio-buffer", buffer);
+    });
+
+    vedioRecorder.start();
+  } catch (error) {
+    console.error("Error accessing the camera", error);
+    updateWindowMessage("Failed to record vedio...");
+  }
+});
 ipcRenderer.on("stop-recording", () => {
   // Stop the media recorder
   updateWindowMessage("Processing...");
@@ -66,6 +109,15 @@ ipcRenderer.on("stop-recording", () => {
   }
 });
 
+
+ipcRenderer.on("stop-recording-vedio", () => {
+  // Stop the media recorder
+  updateWindowMessage("Processing vedio...");
+
+  if (vedioRecorder && vedioRecorder.state !== "inactive") {
+    vedioRecorder.stop();
+  }
+});
 ipcRenderer.on("add-window-name-to-app", (event, windowName) => {
   const analysisContainer = document.getElementById("analysis");
 
