@@ -483,15 +483,15 @@ app.whenReady().then(() => {
   // })
 
   // Request microphone access
-  // systemPreferences.askForMediaAccess('microphone').then(accessGranted => {
-  //   if (accessGranted) {
-  //     console.log('Microphone access granted');
-  //   } else {
-  //     console.log('Microphone access denied');
-  //   }
-  // }).catch(err => {
-  //   console.error('Error requesting microphone access:', err);
-  // });
+  systemPreferences.askForMediaAccess('microphone').then(accessGranted => {
+    if (accessGranted) {
+      console.log('Microphone access granted');
+    } else {
+      console.log('Microphone access denied');
+    }
+  }).catch(err => {
+    console.error('Error requesting microphone access:', err);
+  });
 
   // 请求摄像头权限
   systemPreferences.askForMediaAccess('camera').then((granted) => {
@@ -503,7 +503,7 @@ app.whenReady().then(() => {
     }
   });
   // This call initializes MediaRecorder with an 500ms audio recording, to get around an issue seen on some machines where the first user-triggered recording doesn't work.
-  // mainWindow.webContents.send("init-mediaRecorder");
+  mainWindow.webContents.send("init-mediaRecorder");
   // mainWindow.webContents.send("init-vedioRecorder");
 
   // If defined keyboard shortcut is triggered then run
@@ -539,16 +539,16 @@ app.whenReady().then(() => {
       } catch (error) {
         console.error("Error capturing the active window:", error);
       }
-      // mainWindow.webContents.send("start-recording");
-      // notificationWindow.webContents.send("start-recording");
+      mainWindow.webContents.send("start-recording");
+      notificationWindow.webContents.send("start-recording");
 
       mainWindow.webContents.send("start-recording-vedio");
       // notificationWindow.webContents.send("start-recording-vedio");
       isRecording = true;
     } else {
       // If we're already recording, the keyboard shortcut means we should stop
-      // mainWindow.webContents.send("stop-recording");
-      // notificationWindow.webContents.send("stop-recording");
+      mainWindow.webContents.send("stop-recording");
+      notificationWindow.webContents.send("stop-recording");
       mainWindow.webContents.send("stop-recording-vedio");
       // notificationWindow.webContents.send("stop-recording-vedio");
       isRecording = false;
