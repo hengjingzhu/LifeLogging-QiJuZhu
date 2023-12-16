@@ -22,14 +22,36 @@ const buffer = require("buffer");
 const store = new Store();
 ffmpeg.setFfmpegPath(ffmpegStatic);
 
-const mysql = require('mysql');
-const connection = mysql.createConnection({
-  host: '106.14.169.64:3310',
-  user: 'root',
-  password: 'qijuzhu001',
-  database: 'database_name'
+// const mysql = require('mysql');
+// const connection = mysql.createConnection({
+//   host: '106.14.169.64:3310',
+//   user: 'root',
+//   password: 'qijuzhu001',
+//   database: 'database_name'
+// });
+
+const redis = require('redis');
+const redisClient = redis.createClient();
+
+redisClient.on('connect', function() {
+  console.log('Connected to Redis server.');
 });
 
+redisClient.on('error', function(err) {
+  console.error('Error connecting to Redis server: ' + err);
+});
+
+// redisClient.connect().then(res=>{
+//   console.log(res)
+//   console.log(redisClient.isOpen)
+//   console.log(redisClient.isReady)
+//   redisClient.set('hello', 'world') // 设置key "hello"的值为"world
+//   redisClient.get("hello").then(res=>{
+//     console.log(res)
+//   })
+// }).catch(err =>{
+//   console.log(err)
+// })
 
 // // //  SET CONFIGS AND PLACEHOLDER VARIABLES // // //
 
@@ -434,6 +456,19 @@ async function callErnieApi(audioInput){
 app.whenReady().then(() => {
   createMainWindow();
   createNotificationWindow();
+  // link redis db
+  // redisClient = redis.createClient({
+  //   host: '106.14.169.64',
+  //   port: 7000,
+  //   password: 'qijuzhu001',
+  //   db: 0
+  // });
+
+  // redisClient.connect().then(res=>{
+  //   console.log(res)
+  // }).catch(err =>{
+  //   console.log(err)
+  // })
 
   // Request microphone access
   // systemPreferences.askForMediaAccess('microphone').then(accessGranted => {

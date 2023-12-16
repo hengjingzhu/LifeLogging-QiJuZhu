@@ -15,7 +15,8 @@
     "fs": "^0.0.1-security",
     "mysql": "^2.18.1",
     "openai": "^4.20.1",
-    "path": "^0.12.7"
+    "path": "^0.12.7",
+    "redis": "^4.6.11"
   },
   "scripts": {
     "start": "electron .",
