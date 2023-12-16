@@ -251,6 +251,18 @@ ipcMain.on("vedio-buffer",(event, buffer) =>{
   });
 })
 
+ipcMain.on("save-vedio-frame",(event, buffer) =>{
+  const outputFramePath = path.join(tempFilesDir, `frame_${Date.now()}.png`); // 自定义保存路径和文件名，这里保存为 PNG 图片文件，你可以根据需要修改为其他格式或处理方式
+  fs.writeFile(outputFramePath, buffer, (err) => { // 将视频数据写入文件
+    if (err) {
+      console.error('Error saving video file:', err);
+    } else {
+      // 将帧数据写入文件
+      console.log(`saved to ${outputFramePath}`); // 输出保存路径和帧编号，便于调试和跟踪录制状态和进度
+    }
+  });
+})
+
 ipcMain.on('save-video', async (event, blob) => {
   try {
     // 将 Blob 对象转换为 Buffer，以便使用 fs 模块写入文件
