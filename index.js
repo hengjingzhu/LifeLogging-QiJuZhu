@@ -74,11 +74,19 @@ let isRecording = false;
 let mainWindow;
 let notificationWindow;
 
+// 我来向广大网友道歉 前天我直播解释东方甄选问题的时候 从神态语气表达都有点咄咄逼人 
+// 把手机放在桌上的动作也好像摔下去的样子 这种样子非常没有风度和气度
+//  让广大网友误以为是十分不敬的粗暴行为 
+// 尽管是因为连续几天没有休息 内心焦虑导致了动作僵硬和失控 但这不是理由 我在这里真诚道歉 
+// 以下道歉存在什么样的问题 并给出相应的解决方案
+
 let conversationHistory = [
   {
     role: "system",
     content:
-      "You are helping users with questions about their OSX applications based on screenshots, always answer in at most one sentence.",
+      "东方甄选（港交所：1797）是2021年12月28日新东方学校下属新东方在线推出的直播销售平台，定位于助农项目直播平台，\
+      新东方创始人俞敏洪与新东方在线CEO孙东旭分别在俞敏洪个人抖音直播间与东方甄选直播间销售农产品，专业的主播.\
+      请分析以下的直播画面和表达内容，有什么不合适的地方，并且给出更加合适的方案",
   },
 ];
 
@@ -426,11 +434,28 @@ async function playVisionApiResponse(inputText) {
           return;
       }
 
-      exec(playCommand, (error) => {
+      // exec(playCommand, (error) => {
+      //   if (error) {
+      //     console.error("Failed to play audio:", error);
+      //   } else {
+      //   }
+      // });
+      // https://www.douyin.com/search/%E4%B8%9C%E6%96%B9%E5%B0%8F%E5%AD%99%E6%91%94%E6%89%8B%E6%9C%BA%E8%A7%86%E9%A2%91%E5%AE%8C%E6%95%B4%E7%89%88%E6%A8%AA%E5%B1%8F?modal_id=7312635144915946790&publish_time=0&sort_type=0&source=switch_tab&type=video
+      const playTime = 10000; // 播放时间为10秒
+      const childProcess = exec(playCommand, (error) => {
         if (error) {
           console.error("Failed to play audio:", error);
-        } else {
         }
+      });
+
+      // 在播放时间到达后停止播放
+      const timeout = setTimeout(() => {
+        childProcess.kill();  // 终止子进程
+      }, playTime);
+
+      // 监听子进程的退出事件，确保在播放完成前就停止定时器
+      childProcess.on('exit', () => {
+        clearTimeout(timeout);
       });
     });
   } catch (error) {
